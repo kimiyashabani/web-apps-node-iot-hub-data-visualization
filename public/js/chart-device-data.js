@@ -13,15 +13,18 @@ $(document).ready(() => {
       this.maxLen = 50;
       this.timeData = new Array(this.maxLen);
       this.phData = new Array(this.maxLen);
+      this.percipitateData = new Array(this.maxLen);
     }
 
-    addData(time, ph) {
+    addData(time, ph,percipitate) {
       this.timeData.push(time);
       this.phData.push(ph);
+      this.percipitateData.push(percipitate);
 
       if (this.timeData.length > this.maxLen) {
         this.timeData.shift();
         this.phData.shift();
+        this.percipitateData.shift();
       }
     }
   }
@@ -63,6 +66,17 @@ $(document).ready(() => {
         pointHoverBackgroundColor: 'rgba(255, 204, 0, 1)',
         pointHoverBorderColor: 'rgba(255, 204, 0, 1)',
         spanGaps: true,
+      },
+      {
+        fill: false,
+        label: 'percipitate',
+        yAxisID: 'percipitate',
+        borderColor: 'rgba(255, 204, 0, 1)',
+        pointBoarderColor: 'rgba(255, 204, 0, 1)',
+        backgroundColor: 'rgba(255, 204, 0, 0.4)',
+        pointHoverBackgroundColor: 'rgba(255, 204, 0, 1)',
+        pointHoverBorderColor: 'rgba(255, 204, 0, 1)',
+        spanGaps: true,
       }
     ]
   };
@@ -74,6 +88,15 @@ $(document).ready(() => {
         type: 'linear',
         scaleLabel: {
           labelString: 'ph',
+          display: true,
+        },
+        position: 'left',
+      },
+      {
+        id: 'percipitate',
+        type: 'linear',
+        scaleLabel: {
+          labelString: 'percipitate',
           display: true,
         },
         position: 'left',
@@ -100,6 +123,7 @@ $(document).ready(() => {
     const device = trackedDevices.findDevice(listOfDevices[listOfDevices.selectedIndex].text);
     chartData.labels = device.timeData;
     chartData.datasets[0].data = device.phData;
+    chartData.datasets[1].data = device.percipitateData;
     myLineChart.update();
   }
   listOfDevices.addEventListener('change', OnSelectionChange, false);
@@ -116,7 +140,7 @@ $(document).ready(() => {
       console.log(messageData);
 
       // time and either temperature or humidity are required
-      if (!messageData.MessageDate || (!messageData.IotData.ph)) {
+      if (!messageData.MessageDate || (!messageData.IotData.ph && !messageData.IotData.percipitate)) {
         return;
       }
 
@@ -124,13 +148,13 @@ $(document).ready(() => {
       const existingDeviceData = trackedDevices.findDevice(messageData.DeviceId);
 
       if (existingDeviceData) {
-        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.ph);
+        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.ph,messageData.IotData.percipitate);
       } else {
         const newDeviceData = new DeviceData(messageData.DeviceId);
         trackedDevices.devices.push(newDeviceData);
         const numDevices = trackedDevices.getDevicesCount();
         deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
-        newDeviceData.addData(messageData.MessageDate, messageData.IotData.ph);
+        newDeviceData.addData(messageData.MessageDate, messageData.IotData.ph,messageData.IotData.percipitate);
 
         // add device to the UI list
         const node = document.createElement('option');

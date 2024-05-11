@@ -14,17 +14,27 @@ $(document).ready(() => {
       this.timeData = new Array(this.maxLen);
       this.temperatureData = new Array(this.maxLen);
       this.humidityData = new Array(this.maxLen);
+      //------ NEW --------
+      this.phData = new Array(this.maxLen); 
+      this.precipitateData = new Array(this.maxLen); 
     }
 
     addData(time, temperature, humidity) {
       this.timeData.push(time);
       this.temperatureData.push(temperature);
       this.humidityData.push(humidity || null);
+      //------ NEW --------
+      this.phData.push(ph || null);
+      this.precipitateData.push(precipitate || null);
 
       if (this.timeData.length > this.maxLen) {
         this.timeData.shift();
         this.temperatureData.shift();
         this.humidityData.shift();
+
+        //------ NEW --------
+        this.phData.shift(); 
+        this.precipitateData.shift(); 
       }
     }
   }
@@ -58,49 +68,51 @@ $(document).ready(() => {
     datasets: [
       {
         fill: false,
-        label: 'Temperature',
-        yAxisID: 'Temperature',
-        borderColor: 'rgba(255, 204, 0, 1)',
-        pointBoarderColor: 'rgba(255, 204, 0, 1)',
-        backgroundColor: 'rgba(255, 204, 0, 0.4)',
-        pointHoverBackgroundColor: 'rgba(255, 204, 0, 1)',
-        pointHoverBorderColor: 'rgba(255, 204, 0, 1)',
-        spanGaps: true,
+        label: 'ph', // New
+        yAxisID: 'ph', // New
+        borderColor: 'rgba(75, 192, 192, 1)', // New
+        pointBoarderColor: 'rgba(75, 192, 192, 1)', // New
+        backgroundColor: 'rgba(75, 192, 192, 0.4)', // New
+        pointHoverBackgroundColor: 'rgba(75, 192, 192, 1)', // New
+        pointHoverBorderColor: 'rgba(75, 192, 192, 1)', // New
+        spanGaps: true, // New
       },
       {
         fill: false,
-        label: 'Humidity',
-        yAxisID: 'Humidity',
-        borderColor: 'rgba(24, 120, 240, 1)',
-        pointBoarderColor: 'rgba(24, 120, 240, 1)',
-        backgroundColor: 'rgba(24, 120, 240, 0.4)',
-        pointHoverBackgroundColor: 'rgba(24, 120, 240, 1)',
-        pointHoverBorderColor: 'rgba(24, 120, 240, 1)',
-        spanGaps: true,
+        label: 'precipitate', // New
+        yAxisID: 'precipitate', // New
+        borderColor: 'rgba(255, 99, 132, 1)', // New
+        pointBoarderColor: 'rgba(255, 99, 132, 1)', // New
+        backgroundColor: 'rgba(255, 99, 132, 0.4)', // New
+        pointHoverBackgroundColor: 'rgba(255, 99, 132, 1)', // New
+        pointHoverBorderColor: 'rgba(255, 99, 132, 1)', // New
+        spanGaps: true, // New
       }
     ]
   };
 
   const chartOptions = {
     scales: {
-      yAxes: [{
-        id: 'Temperature',
-        type: 'linear',
-        scaleLabel: {
-          labelString: 'Temperature (ºC)',
-          display: true,
-        },
-        position: 'left',
-      },
+      yAxes: [
       {
-        id: 'Humidity',
-        type: 'linear',
-        scaleLabel: {
-          labelString: 'Humidity (%)',
-          display: true,
-        },
-        position: 'right',
-      }]
+        id: 'ph', // New
+        type: 'linear', // New
+        scaleLabel: { // New
+          labelString: 'ph', // New
+          display: true, // New
+        }, // New
+        position: 'left', // New
+      }, // New
+      {
+        id: 'precipitate', // New
+        type: 'linear', // New
+        scaleLabel: { // New
+          labelString: 'precipitate', // New
+          display: true, // New
+        }, // New
+        position: 'right', // New
+      } // New
+    ]
     }
   };
 
@@ -148,13 +160,21 @@ $(document).ready(() => {
       const existingDeviceData = trackedDevices.findDevice(messageData.DeviceId);
 
       if (existingDeviceData) {
-        existingDeviceData.addData(messageData.MessageDate, messageData.ph, messageData.precipitate);
+        existingDeviceData.addData(
+          messageData.MessageDate,
+           messageData.ph, 
+          messageData.precipitate 
+        );
       } else {
         const newDeviceData = new DeviceData(messageData.DeviceId);
         trackedDevices.devices.push(newDeviceData);
         const numDevices = trackedDevices.getDevicesCount();
         deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
-        newDeviceData.addData(messageData.MessageDate, messageData.ph, messageData.precipitate);
+        newDeviceData.addData(
+          messageData.MessageDate,
+          messageData.ph,
+          messageData.precipitate
+        );
 
         // add device to the UI list
         const node = document.createElement('option');

@@ -13,18 +13,18 @@ $(document).ready(() => {
       this.maxLen = 50;
       this.timeData = new Array(this.maxLen);
       this.phData = new Array(this.maxLen);
-      this.percipitateData = new Array(this.maxLen);
+      this.precipitateData = new Array(this.maxLen);
     }
 
-    addData(time, ph,percipitate) {
+    addData(time, ph,precipitate) {
       this.timeData.push(time);
       this.phData.push(ph);
-      this.percipitateData.push(percipitate);
+      this.precipitateData.push(precipitate);
 
       if (this.timeData.length > this.maxLen) {
         this.timeData.shift();
         this.phData.shift();
-        this.percipitateData.shift();
+        this.precipitateData.shift();
       }
     }
   }
@@ -69,13 +69,13 @@ $(document).ready(() => {
       },
       {
         fill: false,
-        label: 'percipitate',
-        yAxisID: 'percipitate',
-        borderColor: 'rgba(255, 204, 0, 1)',
-        pointBoarderColor: 'rgba(255, 204, 0, 1)',
-        backgroundColor: 'rgba(255, 204, 0, 0.4)',
-        pointHoverBackgroundColor: 'rgba(255, 204, 0, 1)',
-        pointHoverBorderColor: 'rgba(255, 204, 0, 1)',
+        label: 'precipitate',
+        yAxisID: 'precipitate',
+        borderColor: 'rgba(0, 0, 254, 1)',
+        pointBoarderColor: 'rgba(0, 0, 254, 1)',
+        backgroundColor: 'rgba(0, 0, 254, 1)',
+        pointHoverBackgroundColor: 'rgba(0, 0, 254, 1)',
+        pointHoverBorderColor: 'rgba(0, 0, 254, 1)',
         spanGaps: true,
       }
     ]
@@ -93,10 +93,10 @@ $(document).ready(() => {
         position: 'left',
       },
       {
-        id: 'percipitate',
+        id: 'precipitate',
         type: 'linear',
         scaleLabel: {
-          labelString: 'percipitate',
+          labelString: 'precipitate',
           display: true,
         },
         position: 'left',
@@ -123,7 +123,7 @@ $(document).ready(() => {
     const device = trackedDevices.findDevice(listOfDevices[listOfDevices.selectedIndex].text);
     chartData.labels = device.timeData;
     chartData.datasets[0].data = device.phData;
-    chartData.datasets[1].data = device.percipitateData;
+    chartData.datasets[1].data = device.precipitateData;
     myLineChart.update();
   }
   listOfDevices.addEventListener('change', OnSelectionChange, false);
@@ -140,7 +140,7 @@ $(document).ready(() => {
       console.log(messageData);
 
       // time and either temperature or humidity are required
-      if (!messageData.MessageDate || (!messageData.IotData.ph && !messageData.IotData.percipitate)) {
+      if (!messageData.MessageDate || (!messageData.IotData.ph && !messageData.IotData.precipitate)) {
         return;
       }
 
@@ -148,13 +148,13 @@ $(document).ready(() => {
       const existingDeviceData = trackedDevices.findDevice(messageData.DeviceId);
 
       if (existingDeviceData) {
-        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.ph,messageData.IotData.percipitate);
+        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.ph,messageData.IotData.precipitate);
       } else {
         const newDeviceData = new DeviceData(messageData.DeviceId);
         trackedDevices.devices.push(newDeviceData);
         const numDevices = trackedDevices.getDevicesCount();
         deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
-        newDeviceData.addData(messageData.MessageDate, messageData.IotData.ph,messageData.IotData.percipitate);
+        newDeviceData.addData(messageData.MessageDate, messageData.IotData.ph,messageData.IotData.precipitate);
 
         // add device to the UI list
         const node = document.createElement('option');

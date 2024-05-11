@@ -9,35 +9,31 @@ $(document).ready(() => {
   // A class for holding the last N points of telemetry for a device
   class DeviceData {
     constructor(deviceId) {
-      this.deviceId = deviceId;
-      this.maxLen = 50;
-      this.timeData = new Array(this.maxLen);
-      this.temperatureData = new Array(this.maxLen);
-      this.humidityData = new Array(this.maxLen);
-      //------ NEW --------
-      this.phData = new Array(this.maxLen); 
-      this.precipitateData = new Array(this.maxLen); 
+        this.deviceId = deviceId;
+        this.maxLen = 50;
+        this.timeData = new Array(this.maxLen);
+        this.temperatureData = new Array(this.maxLen);
+        this.humidityData = new Array(this.maxLen);
+        this.pHData = new Array(this.maxLen); // New
+        this.precipitationData = new Array(this.maxLen); // New
     }
 
-    addData(time, temperature, humidity) {
-      this.timeData.push(time);
-      this.temperatureData.push(temperature);
-      this.humidityData.push(humidity || null);
-      //------ NEW --------
-      this.phData.push(ph || null);
-      this.precipitateData.push(precipitate || null);
+    addData(time, temperature, humidity, pHValue, precipitation) {
+        this.timeData.push(time);
+        this.temperatureData.push(temperature);
+        this.humidityData.push(humidity || null);
+        this.pHData.push(pHValue || null); // New
+        this.precipitationData.push(precipitation || null); // New
 
-      if (this.timeData.length > this.maxLen) {
-        this.timeData.shift();
-        this.temperatureData.shift();
-        this.humidityData.shift();
-
-        //------ NEW --------
-        this.phData.shift(); 
-        this.precipitateData.shift(); 
-      }
+        if (this.timeData.length > this.maxLen) {
+            this.timeData.shift();
+            this.temperatureData.shift();
+            this.humidityData.shift();
+            this.pHData.shift(); // New
+            this.precipitationData.shift(); // New
+        }
     }
-  }
+}
 
   // All the devices in the list (those that have been sending telemetry)
   class TrackedDevices {
@@ -68,51 +64,49 @@ $(document).ready(() => {
     datasets: [
       {
         fill: false,
-        label: 'ph', // New
-        yAxisID: 'ph', // New
-        borderColor: 'rgba(75, 192, 192, 1)', // New
-        pointBoarderColor: 'rgba(75, 192, 192, 1)', // New
-        backgroundColor: 'rgba(75, 192, 192, 0.4)', // New
-        pointHoverBackgroundColor: 'rgba(75, 192, 192, 1)', // New
-        pointHoverBorderColor: 'rgba(75, 192, 192, 1)', // New
-        spanGaps: true, // New
+        label: 'Temperature',
+        yAxisID: 'Temperature',
+        borderColor: 'rgba(255, 204, 0, 1)',
+        pointBoarderColor: 'rgba(255, 204, 0, 1)',
+        backgroundColor: 'rgba(255, 204, 0, 0.4)',
+        pointHoverBackgroundColor: 'rgba(255, 204, 0, 1)',
+        pointHoverBorderColor: 'rgba(255, 204, 0, 1)',
+        spanGaps: true,
       },
       {
         fill: false,
-        label: 'precipitate', // New
-        yAxisID: 'precipitate', // New
-        borderColor: 'rgba(255, 99, 132, 1)', // New
-        pointBoarderColor: 'rgba(255, 99, 132, 1)', // New
-        backgroundColor: 'rgba(255, 99, 132, 0.4)', // New
-        pointHoverBackgroundColor: 'rgba(255, 99, 132, 1)', // New
-        pointHoverBorderColor: 'rgba(255, 99, 132, 1)', // New
-        spanGaps: true, // New
+        label: 'Humidity',
+        yAxisID: 'Humidity',
+        borderColor: 'rgba(24, 120, 240, 1)',
+        pointBoarderColor: 'rgba(24, 120, 240, 1)',
+        backgroundColor: 'rgba(24, 120, 240, 0.4)',
+        pointHoverBackgroundColor: 'rgba(24, 120, 240, 1)',
+        pointHoverBorderColor: 'rgba(24, 120, 240, 1)',
+        spanGaps: true,
       }
     ]
   };
 
   const chartOptions = {
     scales: {
-      yAxes: [
+      yAxes: [{
+        id: 'Temperature',
+        type: 'linear',
+        scaleLabel: {
+          labelString: 'Temperature (ºC)',
+          display: true,
+        },
+        position: 'left',
+      },
       {
-        id: 'ph', // New
-        type: 'linear', // New
-        scaleLabel: { // New
-          labelString: 'ph', // New
-          display: true, // New
-        }, // New
-        position: 'left', // New
-      }, // New
-      {
-        id: 'precipitate', // New
-        type: 'linear', // New
-        scaleLabel: { // New
-          labelString: 'precipitate', // New
-          display: true, // New
-        }, // New
-        position: 'right', // New
-      } // New
-    ]
+        id: 'Humidity',
+        type: 'linear',
+        scaleLabel: {
+          labelString: 'Humidity (%)',
+          display: true,
+        },
+        position: 'right',
+      }]
     }
   };
 
@@ -152,7 +146,7 @@ $(document).ready(() => {
       console.log(messageData);
 
       // time and either temperature or humidity are required
-      if (!messageData.MessageDate || (!messageData.ph && !messageData.precipitate)) {
+      if (!messageData.MessageDate || (!messageData.IotData.temperature && !messageData.IotData.humidity)) {
         return;
       }
 
@@ -160,21 +154,13 @@ $(document).ready(() => {
       const existingDeviceData = trackedDevices.findDevice(messageData.DeviceId);
 
       if (existingDeviceData) {
-        existingDeviceData.addData(
-          messageData.MessageDate,
-           messageData.ph, 
-          messageData.precipitate 
-        );
+        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity);
       } else {
         const newDeviceData = new DeviceData(messageData.DeviceId);
         trackedDevices.devices.push(newDeviceData);
         const numDevices = trackedDevices.getDevicesCount();
         deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
-        newDeviceData.addData(
-          messageData.MessageDate,
-          messageData.ph,
-          messageData.precipitate
-        );
+        newDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity);
 
         // add device to the UI list
         const node = document.createElement('option');

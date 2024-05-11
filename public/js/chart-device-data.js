@@ -18,12 +18,12 @@ $(document).ready(() => {
         this.precipitationData = new Array(this.maxLen); // New
     }
 
-    addData(time, temperature, humidity, pHValue, precipitation) {
+    addData(time, temperature, humidity, ph, precipitate) {
         this.timeData.push(time);
         this.temperatureData.push(temperature);
         this.humidityData.push(humidity || null);
-        this.pHData.push(pHValue || null); // New
-        this.precipitationData.push(precipitation || null); // New
+        this.pHData.push(ph || null); // New
+        this.precipitationData.push(precipitate || null); // New
 
         if (this.timeData.length > this.maxLen) {
             this.timeData.shift();
@@ -146,7 +146,7 @@ $(document).ready(() => {
       console.log(messageData);
 
       // time and either temperature or humidity are required
-      if (!messageData.MessageDate || (!messageData.IotData.temperature && !messageData.IotData.humidity)) {
+      if (!messageData.MessageDate || (!messageData.IotData.ph && !messageData.IotData.precipitate)) {
         return;
       }
 
@@ -154,13 +154,13 @@ $(document).ready(() => {
       const existingDeviceData = trackedDevices.findDevice(messageData.DeviceId);
 
       if (existingDeviceData) {
-        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity);
+        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.ph, messageData.IotData.precipitate);
       } else {
         const newDeviceData = new DeviceData(messageData.DeviceId);
         trackedDevices.devices.push(newDeviceData);
         const numDevices = trackedDevices.getDevicesCount();
         deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
-        newDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity);
+        newDeviceData.addData(messageData.MessageDate, messageData.IotData.ph, messageData.IotData.precipitate);
 
         // add device to the UI list
         const node = document.createElement('option');

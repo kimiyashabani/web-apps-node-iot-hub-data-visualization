@@ -9,31 +9,22 @@ $(document).ready(() => {
   // A class for holding the last N points of telemetry for a device
   class DeviceData {
     constructor(deviceId) {
-        this.deviceId = deviceId;
-        this.maxLen = 50;
-        this.timeData = new Array(this.maxLen);
-        this.temperatureData = new Array(this.maxLen);
-        this.humidityData = new Array(this.maxLen);
-        this.pHData = new Array(this.maxLen); // New
-        this.precipitationData = new Array(this.maxLen); // New
+      this.deviceId = deviceId;
+      this.maxLen = 50;
+      this.timeData = new Array(this.maxLen);
+      this.phData = new Array(this.maxLen);
     }
 
-    addData(time, temperature, humidity, ph, precipitate) {
-        this.timeData.push(time);
-        this.temperatureData.push(temperature);
-        this.humidityData.push(humidity || null);
-        this.pHData.push(ph || null); // New
-        this.precipitationData.push(precipitate || null); // New
+    addData(time, ph) {
+      this.timeData.push(time);
+      this.phData.push(ph);
 
-        if (this.timeData.length > this.maxLen) {
-            this.timeData.shift();
-            this.temperatureData.shift();
-            this.humidityData.shift();
-            this.pHData.shift(); // New
-            this.precipitationData.shift(); // New
-        }
+      if (this.timeData.length > this.maxLen) {
+        this.timeData.shift();
+        this.phData.shift();
+      }
     }
-}
+  }
 
   // All the devices in the list (those that have been sending telemetry)
   class TrackedDevices {
@@ -64,24 +55,13 @@ $(document).ready(() => {
     datasets: [
       {
         fill: false,
-        label: 'Temperature',
-        yAxisID: 'Temperature',
+        label: 'ph',
+        yAxisID: 'ph',
         borderColor: 'rgba(255, 204, 0, 1)',
         pointBoarderColor: 'rgba(255, 204, 0, 1)',
         backgroundColor: 'rgba(255, 204, 0, 0.4)',
         pointHoverBackgroundColor: 'rgba(255, 204, 0, 1)',
         pointHoverBorderColor: 'rgba(255, 204, 0, 1)',
-        spanGaps: true,
-      },
-      {
-        fill: false,
-        label: 'Humidity',
-        yAxisID: 'Humidity',
-        borderColor: 'rgba(24, 120, 240, 1)',
-        pointBoarderColor: 'rgba(24, 120, 240, 1)',
-        backgroundColor: 'rgba(24, 120, 240, 0.4)',
-        pointHoverBackgroundColor: 'rgba(24, 120, 240, 1)',
-        pointHoverBorderColor: 'rgba(24, 120, 240, 1)',
         spanGaps: true,
       }
     ]
@@ -90,22 +70,13 @@ $(document).ready(() => {
   const chartOptions = {
     scales: {
       yAxes: [{
-        id: 'Temperature',
+        id: 'ph',
         type: 'linear',
         scaleLabel: {
-          labelString: 'Temperature (ºC)',
+          labelString: 'ph',
           display: true,
         },
         position: 'left',
-      },
-      {
-        id: 'Humidity',
-        type: 'linear',
-        scaleLabel: {
-          labelString: 'Humidity (%)',
-          display: true,
-        },
-        position: 'right',
       }]
     }
   };
@@ -128,8 +99,7 @@ $(document).ready(() => {
   function OnSelectionChange() {
     const device = trackedDevices.findDevice(listOfDevices[listOfDevices.selectedIndex].text);
     chartData.labels = device.timeData;
-    chartData.datasets[0].data = device.temperatureData;
-    chartData.datasets[1].data = device.humidityData;
+    chartData.datasets[0].data = device.phData;
     myLineChart.update();
   }
   listOfDevices.addEventListener('change', OnSelectionChange, false);
@@ -146,7 +116,7 @@ $(document).ready(() => {
       console.log(messageData);
 
       // time and either temperature or humidity are required
-      if (!messageData.MessageDate || (!messageData.IotData.ph && !messageData.IotData.precipitate)) {
+      if (!messageData.MessageDate || (!messageData.IotData.ph)) {
         return;
       }
 
@@ -154,13 +124,13 @@ $(document).ready(() => {
       const existingDeviceData = trackedDevices.findDevice(messageData.DeviceId);
 
       if (existingDeviceData) {
-        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.ph, messageData.IotData.precipitate);
+        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.ph);
       } else {
         const newDeviceData = new DeviceData(messageData.DeviceId);
         trackedDevices.devices.push(newDeviceData);
         const numDevices = trackedDevices.getDevicesCount();
         deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
-        newDeviceData.addData(messageData.MessageDate, messageData.IotData.ph, messageData.IotData.precipitate);
+        newDeviceData.addData(messageData.MessageDate, messageData.IotData.ph);
 
         // add device to the UI list
         const node = document.createElement('option');

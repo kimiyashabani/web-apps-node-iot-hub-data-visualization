@@ -6,18 +6,18 @@ const EventHubReader = require('./scripts/event-hub-reader.js');
 
 const iotHubConnectionString = process.env.IotHubConnectionString;
 if (!iotHubConnectionString) {
-  console.error('Environment variable IotHubConnectionString must be specified.');
+  console.error(`Environment variable IotHubConnectionString must be specified.`);
   return;
 }
-console.log('Using IoT Hub connection string [${iotHubConnectionString}]');
+console.log(`Using IoT Hub connection string [${iotHubConnectionString}]`);
 
 const eventHubConsumerGroup = process.env.EventHubConsumerGroup;
 console.log(eventHubConsumerGroup);
 if (!eventHubConsumerGroup) {
-  console.error('Environment variable EventHubConsumerGroup must be specified.');
+  console.error(`Environment variable EventHubConsumerGroup must be specified.`);
   return;
 }
-console.log('Using event hub consumer group [${eventHubConsumerGroup}]');
+console.log(`Using event hub consumer group [${eventHubConsumerGroup}]`);
 
 // Redirect requests to the public subdirectory to the root
 const app = express();
@@ -33,7 +33,7 @@ wss.broadcast = (data) => {
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       try {
-        console.log('Broadcasting data ${data}');
+        console.log(`Broadcasting data ${data}`);
         client.send(data);
       } catch (e) {
         console.error(e);
@@ -53,10 +53,8 @@ const eventHubReader = new EventHubReader(iotHubConnectionString, eventHubConsum
     try {
       const payload = {
         IotData: message,
-        MessageDate: date || new Date().toISOString(),
+        MessageDate: date || Date.now().toISOString(),
         DeviceId: deviceId,
-        pHValue: message.pHValue,
-        Precipitation: message.precipitation
       };
 
       wss.broadcast(JSON.stringify(payload));
